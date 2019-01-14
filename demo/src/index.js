@@ -1,12 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import TransmorpherProvider from './TransmorpherProvider'
 
-import Demo from './Demo'
-import { TransmorpherProvider, getTransmorphables } from './transmorpher'
+const root = document.querySelector('[data-react=root]')
 
 ReactDOM.render(
-  <TransmorpherProvider transmorphables={getTransmorphables('[data-react=root]')}>
-    <Demo />
-  </TransmorpherProvider>,
-  document.querySelector('[data-react=root]')
+  <TransmorpherProvider source={root.outerHTML} />,
+  root
 )

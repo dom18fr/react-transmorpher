@@ -1,48 +1,193 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
-export const getTransmorphables = rootSelector => document.querySelector(rootSelector).cloneNode(true)
+export const transmorphChildren = (node, componentMap) => {
 
-export class TransmorpherProvider extends React.Component {
-
-  constructor(props) {
-    super(props)
-    const { transmorphables } = props
-    this.doc = document.implementation.createDocument ('http://www.w3.org/1999/xhtml', 'html', null);
-    this.doc.documentElement.appendChild(transmorphables);
+  const {ELEMENT_NODE, TEXT_NODE} = Node
+  
+  const jsxAttributesMap = {
+    class: 'className',
+    for: 'htmlFor',
+    'xlink:href' : 'xlinkHref',
+    readonly: 'readOnly'
   }
 
-  static childContextTypes = {
-    getTransmorphedChildren: PropTypes.func.isRequired
-  }
+  const transmorph = (node, componentMap) => {
+  
+    if (ELEMENT_NODE === node.nodeType) {
 
-  getChildContext = () => {
+      const transmorphAttributes = node => {
 
-    return {
-      getTransmorphedChildren: this.getTransmorphedChildren
+        if (undefined === node.attributes) {
+      
+          return []
+        }
+      
+        const getAttributeName = attributeNode => jsxAttributesMap[attributeNode.nodeName] || attributeNode.nodeName
+        
+        return Object.values(node.attributes).reduce(
+          (attributes, attributeNode) => ({
+            ...attributes,
+            [getAttributeName(attributeNode)]: attributeNode.nodeValue
+          }), 
+          {}
+        )
+      }
+
+      const getComponent = (node, componentMap) => {
+
+        const Markup = props => (
+          React.createElement(
+            props.Tag || React.Fragment,
+            props.attributes, props.children
+          )
+        )
+        const matching = componentMap.filter(item => {
+      
+          return item.node == node
+        })
+        if (matching.length) {
+          
+          return matching[0].component
+        }
+      
+        return Markup
+      }
+
+      const component = getComponent(node, componentMap)
+      
+      return {
+          component,
+          Tag: node.tagName.toLowerCase(),
+          attributes: transmorphAttributes(node),
+          children: transmorphChildren(node, componentMap),
+          awake: component.hasOwnProperty('awake') ? component.awake : true,
+          componentKey: component.key
+      }
+    } else if (TEXT_NODE === node.nodeType) {
+      if (node.textContent.length === 0) {
+  
+        return undefined
+      }
+  
+      return node.textContent
     }
+  
+    return undefined
   }
 
-  getTransmorphedChildren = () => {
-    return []
-  }
+  return [].slice.call(node.childNodes).reduce(
+    (acc, node) => {
+      const transmorphed = transmorph(node, componentMap)
 
-  render = () => React.Children.only(this.props.children)
+      return transmorphed ? 
+        [
+          ...acc,
+          transmorphed
+        ] 
+        : acc
+    },
+    []
+  )
 }
 
-export const withTransmorpher = ({selector}) => TransmorphedComponent => {
-  // Find the right way to go to ful transmophing
-  return class extends React.Component {
+export const rebuildChildren = (transmorphedChildren) => {
 
-    static contextTypes = {
-      getTransmorphedChildren: PropTypes.func.isRequired,
+  const rebuildChild = (transmorphedChild, key) => {
+    if ('object' !== typeof transmorphedChild) {
+
+      return transmorphedChild
     }
+    const children = transmorphedChild.children.length > 0 ? rebuildChildren(transmorphedChild.children) : null
 
-    render = () => (
-      <TransmorphedComponent 
-        {...this.props} 
-        transmorphedChildren={this.context.getTransmorphedChildren(selector)} 
-      />
+    return React.createElement(
+      transmorphedChild.component,
+      {
+        Tag: transmorphedChild.Tag,
+        attributes: transmorphedChild.attributes,
+        key,
+        transmorphedChildren: transmorphedChild.children
+      },
+      children
     )
   }
+  // @todo: should return only direct children, since each component rebuild its own
+  return Object.keys(transmorphedChildren).reduce(
+    (builtChildren, key) => {
+      if (
+        false === transmorphedChildren[key].hasOwnProperty('awake') 
+        || transmorphedChildren[key].awake
+      ) {
+
+        return [
+          ...builtChildren,
+          rebuildChild(transmorphedChildren[key], key)
+        ]
+      }
+
+      return [...builtChildren]
+    },
+    []
+  )
 }
+
+export const operatedChildren = (children, operations) => children.map((child) => {
+    if (typeof child === 'string') {
+        
+      return child
+    }
+    let operatedChild = Object.assign({}, child)
+    if (operations.hasOwnProperty(child.componentKey)) {
+      operatedChild = {
+        ...child,
+        ...operations[child.componentKey]
+      }
+    }      
+    if (
+        null !== operatedChild.children
+        && operatedChild.children.length > 0
+    ) {
+      operatedChild = {
+        ...operatedChild,
+        children: operatedChildren(operatedChild.children, operations)
+      }
+    }
+    
+    return operatedChild
+  }
+)
+
+export const componentMapFactory = (rootNode, components) => Object.keys(components).reduce(
+  (acc, key) => {
+
+    const getNodeFromQuery = (rootNode, query) => {
+      if (typeof query == 'string') {
+    
+        return rootNode.querySelector(query)
+      }
+    
+      if (typeof query == 'function') {
+    
+        return query(rootNode)
+      }
+    
+      return null
+    }
+
+    const component = components[key]
+    const node = getNodeFromQuery(rootNode, component.query)
+    const awake = component.awake
+    if (node) {
+      return [
+        ...acc,
+        {
+          component,
+          node,
+          awake
+        }
+      ]
+    }
+
+    return acc
+  }, 
+  []
+)
