@@ -91,7 +91,7 @@ export const transmorphChildren = (node, componentMap) => {
 }
 
 export const rebuildChildren = (transmorphedChildren) => {
-
+  
   const rebuildChild = (transmorphedChild, key) => {
     if ('object' !== typeof transmorphedChild) {
 
