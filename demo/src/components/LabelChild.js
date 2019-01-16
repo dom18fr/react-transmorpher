@@ -1,16 +1,15 @@
 import React from 'react';
-import { withTransmorpher } from '../withTransmorpher'
+import { withTransmorpher } from '../transmorpher'
 
 @withTransmorpher({
-  query: '#the-label',
-  key: 'LabelChild',
-  asleep: true
+  query: rootNode => rootNode.querySelector('#the-label'),
+  key: 'LabelChild'
 })
 export default class LabelChild extends React.Component {
   
   render = () => {
-    
-    return this.props.renderTag({
+    const {Tag, attributes} = this.props
+    const children = this.props.renderChildren({
       MySpan: {
         awake: true,
         attributes: {
@@ -21,9 +20,11 @@ export default class LabelChild extends React.Component {
         awake: true,
         attributes: {
           type: 'text',
-          placeholder: 'yololo'
+          placeholder: 'teub'
         }
       }
     })
+
+    return <Tag {...attributes} onClick={e => alert('yolo !')}>{children}</Tag>
   }
 }

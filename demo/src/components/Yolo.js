@@ -1,7 +1,6 @@
-import { withTransmorpher } from '../withTransmorpher'
+import { withTransmorpher } from '../transmorpher'
 
 export default withTransmorpher({
   query: '[data-react=root] input[type=text]',
   key: 'TheInput',
-  asleep: true
 })(props => props.renderTag())

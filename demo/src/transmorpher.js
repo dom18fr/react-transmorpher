@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const transmorphChildren = (node, componentMap) => {
+const transmorphChildren = (node, componentMap) => {
 
   const {ELEMENT_NODE, TEXT_NODE} = Node
   
@@ -8,7 +8,11 @@ export const transmorphChildren = (node, componentMap) => {
     class: 'className',
     for: 'htmlFor',
     'xlink:href' : 'xlinkHref',
-    readonly: 'readOnly'
+    readonly: 'readOnly',
+    maxlength: 'maxLength',
+    'accept-charset': 'acceptCharset',
+    datetime: 'dateTime',
+    value: 'defaultValue'
   }
 
   const transmorph = (node, componentMap) => {
@@ -38,7 +42,7 @@ export const transmorphChildren = (node, componentMap) => {
         const Markup = props => (
           React.createElement(
             props.Tag || React.Fragment,
-            props.attributes, props.children
+            props.attributes, rebuildChildren(props.transmorphedChildren)
           )
         )
         const matching = componentMap.filter(item => {
@@ -90,14 +94,13 @@ export const transmorphChildren = (node, componentMap) => {
   )
 }
 
-export const rebuildChildren = (transmorphedChildren) => {
+const rebuildChildren = transmorphedChildren => {
   
   const rebuildChild = (transmorphedChild, key) => {
     if ('object' !== typeof transmorphedChild) {
 
       return transmorphedChild
     }
-    const children = transmorphedChild.children.length > 0 ? rebuildChildren(transmorphedChild.children) : null
 
     return React.createElement(
       transmorphedChild.component,
@@ -106,31 +109,78 @@ export const rebuildChildren = (transmorphedChildren) => {
         attributes: transmorphedChild.attributes,
         key,
         transmorphedChildren: transmorphedChild.children
-      },
-      children
+      }      
     )
   }
-  // @todo: should return only direct children, since each component rebuild its own
+  
   return Object.keys(transmorphedChildren).reduce(
-    (builtChildren, key) => {
+    (acc, key) => {
       if (
         false === transmorphedChildren[key].hasOwnProperty('awake') 
-        || transmorphedChildren[key].awake
+        || true === transmorphedChildren[key].awake
       ) {
 
         return [
-          ...builtChildren,
+          ...acc,
           rebuildChild(transmorphedChildren[key], key)
         ]
       }
 
-      return [...builtChildren]
+      return [...acc]
     },
     []
   )
 }
 
-export const operatedChildren = (children, operations) => children.map((child) => {
+export const Transmorpher = props => {
+
+  const getNodeFromQuery = (rootNode, query) => {
+    if (typeof query == 'string') {
+  
+      return rootNode.querySelector(query)
+    }
+  
+    if (typeof query == 'function') {
+  
+      return query(rootNode)
+    }
+  
+    return null
+  }
+
+  const componentMapFactory = (rootNode, components) => Object.keys(components).reduce(
+    (acc, key) => {
+  
+      const component = components[key]
+      const node = getNodeFromQuery(rootNode, component.query)
+      const awake = component.awake
+      if (node) {
+        return [
+          ...acc,
+          {
+            component,
+            node,
+            awake
+          }
+        ]
+      }
+  
+      return acc
+    }, 
+    []
+  )
+
+  const body = document.createElement('body')
+  body.innerHTML = props.source.trim()
+  const rootNode = body.lastChild
+  const componentMap = componentMapFactory(rootNode, props.components)
+
+  return rebuildChildren(transmorphChildren(rootNode, componentMap), componentMap)
+}
+
+export const withTransmorpher = ({query, key, asleep}) => WithTransmorpherComponent => {
+
+  const operatedChildren = (children, operations) => children.map((child) => {
     if (typeof child === 'string') {
         
       return child
@@ -153,41 +203,44 @@ export const operatedChildren = (children, operations) => children.map((child) =
     }
     
     return operatedChild
-  }
-)
+  })
 
-export const componentMapFactory = (rootNode, components) => Object.keys(components).reduce(
-  (acc, key) => {
+	return class extends React.Component {
 
-    const getNodeFromQuery = (rootNode, query) => {
-      if (typeof query == 'string') {
-    
-        return rootNode.querySelector(query)
-      }
-    
-      if (typeof query == 'function') {
-    
-        return query(rootNode)
-      }
-    
-      return null
+		static query = query
+    static awake = (asleep === undefined) ? true : !asleep
+    static key = key
+
+		renderTag = operations => {
+			const {Tag, attributes} = this.props
+
+			return <Tag {...attributes}>{this.renderChildren(operations)}</Tag>
+		}
+
+		renderChildren = operations => {
+			const transmorphedChildren = this.props.transmorphedChildren
+			if (transmorphedChildren.length === 0) {
+
+				return null
+			}
+			if (operations !== undefined) {
+				const operated = operatedChildren(transmorphedChildren, operations)
+				
+				return rebuildChildren(operated)
+			}
+
+			return rebuildChildren(transmorphedChildren)
+		}
+
+		render = () => {
+      
+      return (
+        <WithTransmorpherComponent
+          { ...this.props }
+          renderChildren={ this.renderChildren }
+          renderTag={ this.renderTag }
+        />
+      )
     }
-
-    const component = components[key]
-    const node = getNodeFromQuery(rootNode, component.query)
-    const awake = component.awake
-    if (node) {
-      return [
-        ...acc,
-        {
-          component,
-          node,
-          awake
-        }
-      ]
-    }
-
-    return acc
-  }, 
-  []
-)
+	}
+}
