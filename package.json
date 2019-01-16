@@ -1,0 +1,24 @@
+{
+  "name": "react-transmorpher",
+  "version": "1.0.0",
+  "description": "Given a html string as a source, it render a react component tree. Each component in the tree may be replaced with your own custom component, using a simple HOC. Custom components can handle event and data the way you want, while keeping rendered the same way as it where in the source. In a nutshell, react-transmorpher allows you to handle events and data in the nice react way, while keeping the markup logic outside react.",
+  "main": "transmorpher.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dom18fr/react-transmorpher.git"
+  },
+  "keywords": [
+    "react",
+    "html",
+    "parser"
+  ],
+  "author": "dom18fr <dfabre@clever-age.com> (https://github.com/dom18fr)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dom18fr/react-transmorpher/issues"
+  },
+  "homepage": "https://github.com/dom18fr/react-transmorpher#readme"
+}
