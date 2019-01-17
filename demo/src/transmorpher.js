@@ -205,34 +205,34 @@ export const withTransmorpher = ({query, key, asleep}) => WithTransmorpherCompon
     return operatedChild
   })
 
-	return class extends React.Component {
+  return class extends React.Component {
 
-		static query = query
+    static query = query
     static awake = (asleep === undefined) ? true : !asleep
     static key = key
 
-		renderTag = operations => {
-			const {Tag, attributes} = this.props
+    renderTag = operations => {
+      const {Tag, attributes} = this.props
 
-			return <Tag {...attributes}>{this.renderChildren(operations)}</Tag>
-		}
+      return <Tag {...attributes}>{this.renderChildren(operations)}</Tag>
+    }
 
-		renderChildren = operations => {
-			const transmorphedChildren = this.props.transmorphedChildren
-			if (transmorphedChildren.length === 0) {
+    renderChildren = operations => {
+      const transmorphedChildren = this.props.transmorphedChildren
+      if (transmorphedChildren.length === 0) {
 
-				return null
-			}
-			if (operations !== undefined) {
-				const operated = operatedChildren(transmorphedChildren, operations)
-				
-				return rebuildChildren(operated)
-			}
+        return null
+      }
+      if (operations !== undefined) {
+        const operated = operatedChildren(transmorphedChildren, operations)
+        
+        return rebuildChildren(operated)
+      }
 
-			return rebuildChildren(transmorphedChildren)
-		}
+      return rebuildChildren(transmorphedChildren)
+    }
 
-		render = () => {
+    render = () => {
       
       return (
         <WithTransmorpherComponent
@@ -242,5 +242,5 @@ export const withTransmorpher = ({query, key, asleep}) => WithTransmorpherCompon
         />
       )
     }
-	}
+  }
 }
