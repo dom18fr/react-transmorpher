@@ -1,12 +1,12 @@
 {
   "name": "react-transmorpher",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Given a html string as a source, it render a react component tree. Each component in the tree may be replaced with your own custom component, using a simple HOC. Custom components can handle event and data the way you want, while keeping rendered the same way as it where in the source. In a nutshell, react-transmorpher allows you to handle events and data in the nice react way, while keeping the markup logic outside react.",
-  "main": "dist/main.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "webpack --mode=production",
-    "watch": "webpack --mode=development --progress --watch",
-    "prepublishOnly": "npm run build"
+    "transpile": "babel src -d dist",
+    "prepublishOnly": "npm run transpile"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
+    "@babel/cli": "^7.2.3",
     "@babel/plugin-proposal-class-properties": "^7.2.3",
     "@babel/plugin-proposal-decorators": "^7.2.3",
     "@babel/preset-env": "^7.2.3",
