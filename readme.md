@@ -1,7 +1,7 @@
 # react-transmorpher
 
 *Given a html string as a source, the `Transmorpher` component re-render it as a react components tree.  
-Each component in the tree may be replaced with your own custom component, using `withTransmorpher` HOC. Custom components can handle event and data just the way you want, while keeping rendered the same way as it where in the source.  
+Each component in the tree may be replaced with your own custom component, using `withTransmorpher` HOC. Custom components can handle event and data just the way you want, while keeping rendered the same way as it was in the source.  
 In a nutshell, react-transmorpher allows you to handle events and data in the nice react way, while keeping the style and markup logic outside of react.*
 
 Example :
