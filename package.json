@@ -1,6 +1,6 @@
 {
   "name": "react-transmorpher",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Given a html string as a source, it render a react component tree. Each component in the tree may be replaced with your own custom component, using a simple HOC. Custom components can handle event and data the way you want, while keeping rendered the same way as it where in the source. In a nutshell, react-transmorpher allows you to handle events and data in the nice react way, while keeping the markup logic outside react.",
   "main": "dist/index.js",
   "scripts": {
